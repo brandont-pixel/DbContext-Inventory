@@ -22,6 +22,8 @@ namespace DbContext
         public DbSet<Barcodes> barcodes { get; set; }
     }
 
+
+
     public class Barcodes
     {
         [Key]

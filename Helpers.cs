@@ -10,7 +10,7 @@ namespace DbContext
             using (var db = new SqlDbContext(sqlSettings))
             {
                 var serials = db.barcodes
-                    .Where(s => s.SerialNo.StartsWith(prefix) && s.Date == DateTime.Today)
+                    .Where(s => s.SerialNo.StartsWith(prefix))
                     .Select(s => s.SerialNo)
                     .ToList();
 
