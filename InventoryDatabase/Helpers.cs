@@ -1,15 +1,31 @@
-﻿
-
-namespace DbContext
+﻿namespace DbContext.InventoryDatabase
 {
     public class Helpers
     {
-        public static int GetLatestIncrementFromBarcodes(string prefix, SqlSettings sqlSettings)
+        public static bool DiscardSelectedModules(List<string> serialNos, string note)
+        {
+            using (var db = new CapacityDbContext())
+            {
+                foreach (var serial in serialNos)
+                {
+                    var module = db.capacity_table.FirstOrDefault(m => m.SerialNo == serial);
+                    if (module != null)
+                    {
+                        module.Discarded = true;
+                        module.Notes = note;
+                    }
+                }
+                db.SaveChanges();
+            }
+            return true;
+        }
+
+        public static int GetLatestIncrementFromBarcodes(string prefix)
         {
             int highestIncrement = 0;
-            using (var db = new SqlDbContext(sqlSettings))
+            using (var db = new CapacityDbContext())
             {
-                var serials = db.barcodes
+                var serials = db.barcode_table
                     .Where(s => s.SerialNo.StartsWith(prefix))
                     .Select(s => s.SerialNo)
                     .ToList();
@@ -26,19 +42,19 @@ namespace DbContext
             return highestIncrement;
         }
 
-        public static void SaveToBarcodes(List<string> barcodes, SqlSettings sqlSettings)
+        public static void SaveToBarcodes(List<string> barcodes)
         {
-            using (var db = new SqlDbContext(sqlSettings))
+            using (var db = new CapacityDbContext())
             {
                 foreach (var barcode in barcodes)
                 {
-                    var serialToAdd = new Barcodes
+                    var serialToAdd = new BarcodeRow
                     {
                         SerialNo = barcode,
                         Date = DateTime.Today
                     };
 
-                    db.barcodes.Add(serialToAdd);
+                    db.barcode_table.Add(serialToAdd);
                 }
                 db.SaveChanges();
             }
