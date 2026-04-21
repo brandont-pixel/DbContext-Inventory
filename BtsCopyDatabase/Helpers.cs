@@ -76,85 +76,92 @@ namespace DbContext.BtsCopyDatabase
             return capacity;
         }
 
-        public static VoltageData? LoadSingleModuleDBCData(string moduleNumber, int minTestLength, BtsDbContext db)
+        public static VoltageData? LoadSingleModuleDBCData(string moduleNumber, int minTestLength)
         {
-            VoltageData? voltageData = new VoltageData();
-            Dictionary<int, double> cellVs = new();
-
-            var result = db.record
-                .Where(r => r.CellBarcode == moduleNumber
-                         && r.StepName == "cc_dchg"
-                         && r.TestId == db.record
-                             .Where(r2 => r2.CellBarcode == moduleNumber
-                                       && r2.DataUploadTag == "1")
-                             .OrderByDescending(r2 => r2.Date)
-                             .Select(r2 => r2.TestId)
-                             .FirstOrDefault())
-                .OrderBy(r => r.SeqId)
-                .Select(r => new
-                {
-                    r.SeqId,
-                    r.DBCSig
-                })
-                .ToList();
-            foreach (var e in result)
+            using (var db = new BtsDbContext())
             {
-                if (e.DBCSig == null) throw new Exception($"Unable to find the dbc info for {moduleNumber}");
-                DBCSig? dbcSig = JsonSerializer.Deserialize<DBCSig?>(e.DBCSig);
-                if (dbcSig == null || dbcSig.LowCellVoltage == null || dbcSig.HighCellVoltage == null ||
-                    dbcSig.LowCellVoltage == 0 || dbcSig.LowCellVoltage == 0)
-                    return null;
-                voltageData.LowCellVoltage.Add((double)dbcSig.LowCellVoltage);
-                voltageData.HighCellVoltage.Add((double)dbcSig.HighCellVoltage);
-                cellVs[e.SeqId] = ((double)dbcSig.HighCellVoltage - (double)dbcSig.LowCellVoltage);
-            }
-            if (voltageData.LowCellVoltage.Count < minTestLength || voltageData.HighCellVoltage.Count < minTestLength)
-                return null;
+                VoltageData? voltageData = new VoltageData();
+                Dictionary<int, double> cellVs = new();
 
-            voltageData.TdeltaV = cellVs.MinBy(kvp => kvp.Key).Value;
-            voltageData.BdeltaV = cellVs.MaxBy(kvp => kvp.Key).Value;
-            return voltageData;
+                var result = db.record
+                    .Where(r => r.CellBarcode == moduleNumber
+                             && r.StepName == "cc_dchg"
+                             && r.TestId == db.record
+                                 .Where(r2 => r2.CellBarcode == moduleNumber
+                                           && r2.DataUploadTag == "1")
+                                 .OrderByDescending(r2 => r2.Date)
+                                 .Select(r2 => r2.TestId)
+                                 .FirstOrDefault())
+                    .OrderBy(r => r.SeqId)
+                    .Select(r => new
+                    {
+                        r.SeqId,
+                        r.DBCSig
+                    })
+                    .ToList();
+                foreach (var e in result)
+                {
+                    if (e.DBCSig == null) throw new Exception($"Unable to find the dbc info for {moduleNumber}");
+                    DBCSig? dbcSig = JsonSerializer.Deserialize<DBCSig?>(e.DBCSig);
+                    if (dbcSig == null || dbcSig.LowCellVoltage == null || dbcSig.HighCellVoltage == null ||
+                        dbcSig.LowCellVoltage == 0 || dbcSig.LowCellVoltage == 0)
+                        return null;
+                    voltageData.LowCellVoltage.Add((double)dbcSig.LowCellVoltage);
+                    voltageData.HighCellVoltage.Add((double)dbcSig.HighCellVoltage);
+                    cellVs[e.SeqId] = ((double)dbcSig.HighCellVoltage - (double)dbcSig.LowCellVoltage);
+                }
+                if (voltageData.LowCellVoltage.Count < minTestLength || voltageData.HighCellVoltage.Count < minTestLength)
+                    return null;
+
+                voltageData.TdeltaV = cellVs.MinBy(kvp => kvp.Key).Value;
+                voltageData.BdeltaV = cellVs.MaxBy(kvp => kvp.Key).Value;
+                return voltageData;
+            }
+
         }
 
-        public static VoltageData? LoadSingleModuleAuxData(string moduleNumber, int mintestLength, BtsDbContext db)
+        public static VoltageData? LoadSingleModuleAuxData(string moduleNumber, int mintestLength)
         {
-            VoltageData voltageData = new VoltageData();
-            Dictionary<int, double> cellVs = new();
-            var result = db.record
-                .Where(r => r.CellBarcode == moduleNumber
-                         && r.StepName == "cc_dchg"
-                         && r.TestId == db.record
-                             .Where(r2 => r2.CellBarcode == moduleNumber
-                                       && r2.DataUploadTag == "1")
-                             .OrderByDescending(r2 => r2.Date)
-                             .Select(r2 => r2.TestId)
-                             .FirstOrDefault())
-                .OrderBy(r => r.SeqId)
-                .Select(r => new
-                {
-                    r.AuxVmax,
-                    r.AuxVmin,
-                    r.AuxDiffVolt,
-                    r.SeqId
-                })
-                .ToList();
-            foreach (var e in result)
+            using (var db = new BtsDbContext())
             {
-                double? lowV = (double?)e.AuxVmin;
-                double? highV = (double?)e.AuxVmax;
-                double? diffVolt = (double?)e.AuxDiffVolt;
-                if (lowV == null || highV == null || diffVolt == null) return null;
-                voltageData.LowCellVoltage.Add((double)lowV);
-                voltageData.HighCellVoltage.Add((double)highV);
+                VoltageData voltageData = new VoltageData();
+                Dictionary<int, double> cellVs = new();
+                var result = db.record
+                    .Where(r => r.CellBarcode == moduleNumber
+                             && r.StepName == "cc_dchg"
+                             && r.TestId == db.record
+                                 .Where(r2 => r2.CellBarcode == moduleNumber
+                                           && r2.DataUploadTag == "1")
+                                 .OrderByDescending(r2 => r2.Date)
+                                 .Select(r2 => r2.TestId)
+                                 .FirstOrDefault())
+                    .OrderBy(r => r.SeqId)
+                    .Select(r => new
+                    {
+                        r.AuxVmax,
+                        r.AuxVmin,
+                        r.AuxDiffVolt,
+                        r.SeqId
+                    })
+                    .ToList();
+                foreach (var e in result)
+                {
+                    double? lowV = (double?)e.AuxVmin;
+                    double? highV = (double?)e.AuxVmax;
+                    double? diffVolt = (double?)e.AuxDiffVolt;
+                    if (lowV == null || highV == null || diffVolt == null) return null;
+                    voltageData.LowCellVoltage.Add((double)lowV);
+                    voltageData.HighCellVoltage.Add((double)highV);
 
-                cellVs[e.SeqId] = (double)diffVolt;
+                    cellVs[e.SeqId] = (double)diffVolt;
+                }
+
+                if (voltageData.LowCellVoltage.Count < mintestLength || voltageData.LowCellVoltage.Count < mintestLength)
+                    return null;
+                voltageData.TdeltaV = cellVs.MinBy(kvp => kvp.Key).Value;
+                voltageData.BdeltaV = cellVs.MaxBy(kvp => kvp.Key).Value;
+                return voltageData;
             }
-
-            if (voltageData.LowCellVoltage.Count < mintestLength || voltageData.LowCellVoltage.Count < mintestLength)
-                return null;
-            voltageData.TdeltaV = cellVs.MinBy(kvp => kvp.Key).Value;
-            voltageData.BdeltaV = cellVs.MaxBy(kvp => kvp.Key).Value;
-            return voltageData;
         }
     }
 
