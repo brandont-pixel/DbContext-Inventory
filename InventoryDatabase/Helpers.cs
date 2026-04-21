@@ -2,13 +2,22 @@
 {
     public class Helpers
     {
+
+        public static bool IsModuleInDatabase(string serialNo)
+        {
+            using (var db = new CapacityDbContext())
+            {
+                return db.capacity_table.Any(m => m.SerialNo.ToUpper() == serialNo.ToUpper());
+            }
+        }
+
         public static bool DiscardSelectedModules(List<string> serialNos, string note)
         {
             using (var db = new CapacityDbContext())
             {
                 foreach (var serial in serialNos)
                 {
-                    var module = db.capacity_table.FirstOrDefault(m => m.SerialNo == serial);
+                    var module = db.capacity_table.FirstOrDefault(m => m.SerialNo.ToUpper() == serial.ToUpper());
                     if (module != null)
                     {
                         module.Discarded = true;

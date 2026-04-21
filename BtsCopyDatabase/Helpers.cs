@@ -1,10 +1,61 @@
-﻿using System.Text.Json;
+﻿using Microsoft.EntityFrameworkCore;
+using MySqlConnector;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace DbContext.BtsCopyDatabase
 {
     public class Helpers
     {
+        public static List<RecordSliceRow> LoadRecordByChunks(BtsDbContext btsDb, List<string> barcodes, int chunkSize = 500)
+        {
+            var allRows = new List<RecordSliceRow>();
+
+            foreach (var chunk in barcodes.Chunk(chunkSize))
+            {
+                string[] names = chunk.Select((_, i) => $"@p{i}").ToArray();
+                string inClause = string.Join(", ", names);
+
+                string sql = $@"
+                    WITH latest AS ( 
+                        SELECT 
+                            r.Cell_Barcode AS CellBarcode, 
+                            r.Test_ID      AS TestId, 
+                            ROW_NUMBER() OVER ( 
+                                PARTITION BY r.Cell_Barcode 
+                                ORDER BY r.`Date` DESC, r.Test_ID DESC 
+                            ) AS rn 
+                        FROM bts_copy.record r 
+                        WHERE r.DataUploadTag = '1' 
+                          AND r.Cell_Barcode IN ({inClause}) 
+                    ) 
+                    SELECT 
+                        r.Cell_Barcode AS CellBarcode, 
+                        r.seq_id       AS SeqId, 
+                        r.Step_Name    AS StepName, 
+                        r.DBCSig       AS DBCSig, 
+                        r.Aux_Vmax     AS AuxVmax, 
+                        r.Aux_Vmin     AS AuxVmin, 
+                        r.AuxDiffVolt  AS AuxDiffVolt, 
+                        r.Test_ID      AS TestId 
+                    FROM bts_copy.record r 
+                    JOIN latest l 
+                      ON l.CellBarcode = r.Cell_Barcode 
+                     AND l.TestId      = r.Test_ID 
+                     AND l.rn          = 1 
+                    WHERE r.Step_Name = 'cc_dchg' 
+                    ORDER BY r.Cell_Barcode, r.seq_id;";
+                var sqlParams = chunk.Select((barcode, i) => new MySqlParameter($"@p{i}", barcode)).ToArray();
+                var rows = btsDb.Set<RecordSliceRow>()
+                    .FromSqlRaw(sql, sqlParams)
+                    .AsNoTracking()
+                    .ToList();
+
+                allRows.AddRange(rows);
+            }
+            return allRows;
+        }
+
         public static double? GetModuleCapacity(string moduleNumber)
         {
             double? capacity = null;
