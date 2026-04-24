@@ -11,7 +11,8 @@
             }
         }
 
-        public static void EditModule(string serialNo, string model, string? type, double capacity, double ir, string? location = null, bool discarded = false, string? notes = null)
+        public static void EditModule(string serialNo, string model, string? type,
+            double capacity, double ir, string? location = null, bool discarded = false, string? notes = null)
         {
             using (var db = new CapacityDbContext())
             {
@@ -19,17 +20,15 @@
                 if (type == "N/A" || string.IsNullOrEmpty(type)) type = null;
                 if (location == "N/A" || string.IsNullOrEmpty(location)) location = null;
                 if (string.IsNullOrEmpty(notes)) notes = null;
-                if (module != null)
-                {
-                    module.Model = model;
-                    module.Type = type;
-                    module.Capacity = capacity;
-                    module.IR = ir;
-                    module.Location = location;
-                    module.Discarded = discarded;
-                    module.Notes = notes;
-                    db.SaveChanges();
-                }
+                if (module == null) return;
+                module.Model = model;
+                module.Type = type;
+                module.Capacity = capacity;
+                module.IR = ir;
+                module.Location = location;
+                module.Discarded = discarded;
+                module.Notes = notes;
+                db.SaveChanges();
             }
         }
 
