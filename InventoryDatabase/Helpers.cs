@@ -3,6 +3,36 @@
     public class Helpers
     {
 
+        public static CapacityRow? LookupModule(string serialNo)
+        {
+            using (var db = new CapacityDbContext())
+            {
+                return db.capacity_table.FirstOrDefault(m => m.SerialNo.ToUpper() == serialNo.ToUpper());
+            }
+        }
+
+        public static void EditModule(string serialNo, string model, string? type, double capacity, double ir, string? location = null, bool discarded = false, string? notes = null)
+        {
+            using (var db = new CapacityDbContext())
+            {
+                var module = db.capacity_table.FirstOrDefault(m => m.SerialNo.ToUpper() == serialNo.ToUpper());
+                if (type == "N/A" || string.IsNullOrEmpty(type)) type = null;
+                if (location == "N/A" || string.IsNullOrEmpty(location)) location = null;
+                if (string.IsNullOrEmpty(notes)) notes = null;
+                if (module != null)
+                {
+                    module.Model = model;
+                    module.Type = type;
+                    module.Capacity = capacity;
+                    module.IR = ir;
+                    module.Location = location;
+                    module.Discarded = discarded;
+                    module.Notes = notes;
+                    db.SaveChanges();
+                }
+            }
+        }
+
         public static bool IsModuleInDatabase(string serialNo)
         {
             using (var db = new CapacityDbContext())
