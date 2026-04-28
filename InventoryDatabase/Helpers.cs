@@ -2,12 +2,34 @@
 {
     public class Helpers
     {
+        public static List<string> GetLocations()
+        {
+            using (var db = new CapacityDbContext())
+            {
+                return db.warranty_table.Select(w => w.Location).Distinct().ToList();
+            }
+        }
+
+        public static List<string> GetHeaders(string location)
+        {
+            using (var db = new CapacityDbContext())
+            {
+                return db.warranty_table.Where(w => w.Location == location).Select(w => w.Header).Distinct().ToList();
+            }
+        }
+        public static List<string> GetWarranties(string header, string location)
+        {
+            using (var db = new CapacityDbContext())
+            {
+                return db.warranty_table.Where(w => w.Header == header && w.Location == location).Select(w => w.Warranty).ToList();
+            }
+        }
 
         public static CapacityRow? LookupModule(string serialNo)
         {
             using (var db = new CapacityDbContext())
             {
-                return db.capacity_table.FirstOrDefault(m => m.SerialNo.ToUpper() == serialNo.ToUpper());
+                return db.capacity_table.FirstOrDefault(m => m.SerialNo == serialNo);
             }
         }
 
@@ -16,7 +38,7 @@
         {
             using (var db = new CapacityDbContext())
             {
-                var module = db.capacity_table.FirstOrDefault(m => m.SerialNo.ToUpper() == serialNo.ToUpper());
+                var module = db.capacity_table.FirstOrDefault(m => m.SerialNo == serialNo);
                 if (type == "N/A" || string.IsNullOrEmpty(type)) type = null;
                 if (location == "N/A" || string.IsNullOrEmpty(location)) location = null;
                 if (string.IsNullOrEmpty(notes)) notes = null;
@@ -36,7 +58,7 @@
         {
             using (var db = new CapacityDbContext())
             {
-                return db.capacity_table.Any(m => m.SerialNo.ToUpper() == serialNo.ToUpper());
+                return db.capacity_table.Any(m => m.SerialNo == serialNo);
             }
         }
 
@@ -46,7 +68,7 @@
             {
                 foreach (var serial in serialNos)
                 {
-                    var module = db.capacity_table.FirstOrDefault(m => m.SerialNo.ToUpper() == serial.ToUpper());
+                    var module = db.capacity_table.FirstOrDefault(m => m.SerialNo == serial);
                     if (module != null)
                     {
                         module.Discarded = true;

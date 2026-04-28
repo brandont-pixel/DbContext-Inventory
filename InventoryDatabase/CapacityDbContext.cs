@@ -21,6 +21,15 @@ namespace DbContext.InventoryDatabase
 
         public DbSet<BarcodeRow> barcode_table { get; set; }
         public DbSet<CapacityRow> capacity_table { get; set; }
+        public DbSet<WarrantyRow> warranty_table { get; set; }
+    }
+
+    [Keyless]
+    public class WarrantyRow
+    {
+        public string Location { get; set; } = "";
+        public string Header { get; set; } = "";
+        public string Warranty { get; set; } = "";
     }
 
     public class CapacityRow
