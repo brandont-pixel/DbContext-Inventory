@@ -106,17 +106,16 @@
         {
             using (var db = new CapacityDbContext())
             {
-                foreach (var barcode in barcodes)
+                foreach (string barcode in barcodes)
                 {
                     var serialToAdd = new BarcodeRow
                     {
                         SerialNo = barcode,
                         Date = DateTime.Today
                     };
-
                     db.barcode_table.Add(serialToAdd);
+                    db.SaveChanges();
                 }
-                db.SaveChanges();
             }
         }
 

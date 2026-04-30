@@ -48,7 +48,6 @@ namespace DbContext.BtsCopyDatabase
                 var sqlParams = chunk.Select((barcode, i) => new MySqlParameter($"@p{i}", barcode)).ToArray();
                 var rows = btsDb.Set<RecordSliceRow>()
                     .FromSqlRaw(sql, sqlParams)
-                    .AsNoTracking()
                     .ToList();
 
                 allRows.AddRange(rows);
