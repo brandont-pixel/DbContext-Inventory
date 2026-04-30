@@ -102,20 +102,17 @@
             return highestIncrement;
         }
 
-        public static void SaveToBarcodes(List<string> barcodes)
+        public static void SaveToBarcodes(string barcode)
         {
             using (var db = new CapacityDbContext())
             {
-                foreach (string barcode in barcodes)
+                var serialToAdd = new BarcodeRow
                 {
-                    var serialToAdd = new BarcodeRow
-                    {
-                        SerialNo = barcode,
-                        Date = DateTime.Today
-                    };
-                    db.barcode_table.Add(serialToAdd);
-                    db.SaveChanges();
-                }
+                    SerialNo = barcode,
+                    Date = DateTime.Today
+                };
+                db.barcode_table.Add(serialToAdd);
+                db.SaveChanges();
             }
         }
 
