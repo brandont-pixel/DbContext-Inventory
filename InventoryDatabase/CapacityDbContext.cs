@@ -7,12 +7,15 @@ namespace DbContext.InventoryDatabase
         private readonly string _connectionString;
         public CapacityDbContext()
         {
+            string? userId = Environment.GetEnvironmentVariable("DB_USER_ID");
+            string? password = Environment.GetEnvironmentVariable("DB_PASSWORD");
+            if (userId == null || password == null) throw new Exception("Database credentials not found in environment variables");
             _connectionString =
                 "Server=192.168.50.200;" +
                 "Port=3306;" +
                 "Database=inventory;" +
-                "User Id=admin;" +
-                "Password=admin;";
+                $"User Id={userId};" +
+                $"Password={password};";
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>

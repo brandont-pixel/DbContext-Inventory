@@ -5,19 +5,22 @@ namespace DbContext.SettingsDatabase
 {
     public class SettingsDbContext : Microsoft.EntityFrameworkCore.DbContext
     {
-        private readonly string _connString;
+        private readonly string _connectionString;
         public SettingsDbContext()
         {
-            _connString =
+            string? userId = Environment.GetEnvironmentVariable("DB_USER_ID");
+            string? password = Environment.GetEnvironmentVariable("DB_PASSWORD");
+            if (userId == null || password == null) throw new Exception("Database credentials not found in environment variables");
+            _connectionString =
                 "Server=192.168.50.200;" +
                 "Port=3306;" +
                 "Database=settings;" +
-                "User Id=admin;" +
-                "Password=admin;";
+                $"User Id={userId};" +
+                $"Password={password};";
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) =>
-            optionsBuilder.UseMySql(_connString, ServerVersion.AutoDetect(_connString));
+            optionsBuilder.UseMySql(_connectionString, ServerVersion.AutoDetect(_connectionString));
 
         public DbSet<ModelRow> models { get; set; }
         public DbSet<PrefixRow> prefixes { get; set; }
