@@ -83,11 +83,22 @@
         public static int GetLatestIncrementFromBarcodes(string prefix)
         {
             int highestIncrement = 0;
+            //serials of a longer prefix that starts with this one (NIROEV for NIRO) belong to that prefix, not this one
+            List<string> longerPrefixes;
+            using (var settingsDb = new SettingsDatabase.SettingsDbContext())
+            {
+                longerPrefixes = settingsDb.prefixes
+                    .Where(p => p.Prefix.StartsWith(prefix) && p.Prefix.Length > prefix.Length)
+                    .Select(p => p.Prefix)
+                    .ToList();
+            }
             using (var db = new CapacityDbContext())
             {
                 var serials = db.barcode_table
                     .Where(s => s.SerialNo.StartsWith(prefix))
                     .Select(s => s.SerialNo)
+                    .ToList()
+                    .Where(s => !longerPrefixes.Any(p => s.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
                     .ToList();
 
                 if (!serials.Any())

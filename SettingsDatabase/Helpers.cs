@@ -94,7 +94,10 @@
         {
             using (var db = new SettingsDbContext())
             {
-                var prefix = db.prefixes.Where(p => barcode.StartsWith(p.Prefix)).FirstOrDefault();
+                //longest match wins, so NIROEV-... resolves to NIROEV rather than NIRO
+                var prefix = db.prefixes.Where(p => barcode.StartsWith(p.Prefix))
+                    .OrderByDescending(p => p.Prefix.Length)
+                    .FirstOrDefault();
                 if (prefix == null) return (null, null);
                 return (prefix.Prefix, prefix.Model);
             }
