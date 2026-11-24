@@ -29,6 +29,13 @@
                 return db.prefixes.Where(p => models.Contains(p.Model)).Select(p => p.Prefix).ToList();
             }
         }
+        public static List<string> GetPrintablePrefixes()
+        {
+            using (var db = new SettingsDbContext())
+            {
+                return db.printable_prefixes.OrderBy(p => p.Prefix).Select(p => p.Prefix).ToList();
+            }
+        }
         public static string? GetEditPassword()
         {
             using (var db = new SettingsDbContext())

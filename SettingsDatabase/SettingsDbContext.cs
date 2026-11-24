@@ -24,6 +24,7 @@ namespace DbContext.SettingsDatabase
 
         public DbSet<ModelRow> models { get; set; }
         public DbSet<PrefixRow> prefixes { get; set; }
+        public DbSet<PrintablePrefixRow> printable_prefixes { get; set; }
         public DbSet<IRMultiplierRow> ir_multipliers { get; set; }
         public DbSet<ModuleSettingRow> module_settings { get; set; }
         public DbSet<VoltageDataSourceRow> voltage_data_sources { get; set; }
@@ -54,6 +55,13 @@ namespace DbContext.SettingsDatabase
         [Key]
         public string Prefix { get; set; } = "";
         public string Model { get; set; } = "";
+    }
+
+    //subset of prefixes that the Barcode Generator offers for printing
+    public class PrintablePrefixRow
+    {
+        [Key]
+        public string Prefix { get; set; } = "";
     }
 
     [PrimaryKey(nameof(Model), nameof(ModuleType))]
