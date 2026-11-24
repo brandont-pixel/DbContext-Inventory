@@ -48,6 +48,8 @@ namespace DbContext.SettingsDatabase
         [Key]
         public string Model { get; set; } = "";
         public string ModuleOrBattery { get; set; } = "";
+        //label the Module Recommender shows for this model (e.g. "CV1/CV2"), null to leave it off the list
+        public string? PrimaryPrefix { get; set; }
     }
 
     public class PrefixRow
@@ -102,7 +104,7 @@ namespace DbContext.SettingsDatabase
     {
         [Key]
         public int OrderId { get; set; }
-        public string Prefix { get; set; } = "";
+        public string Model { get; set; } = "";
         public string ModuleType { get; set; } = "";
     }
 
